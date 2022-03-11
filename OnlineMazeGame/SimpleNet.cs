@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
 
 namespace SimpleNet
 {
@@ -31,8 +30,6 @@ namespace SimpleNet
         public Dictionary<string, ServerClient> Clients = new Dictionary<string, ServerClient>();
         //message queue of all data transmitted by clients
         public ConcurrentQueue<Message> Messages = new ConcurrentQueue<Message>(); //thread-safe queue
-        public int Port = 0;
-        public string IP = "";
 
         private TcpListener server;
 
@@ -57,8 +54,6 @@ namespace SimpleNet
                 Task listener = new Task(Listen);
                 listener.Start();
                 started = true;
-                Port = port;
-                IP = IPV4Address;
             }
             catch
             {
@@ -271,8 +266,7 @@ namespace SimpleNet
         public Client(string serverIP, int serverPort)
         {
             clientSocket = new TcpClient(serverIP, serverPort);
-            clientSocket.Connect(serverIP, serverPort);
-            Console.WriteLine("fff");
+            //clientSocket.Connect(serverIP, serverPort);
             //receive ID
             Byte[] bytesFrom = new byte[65536];
             string DataFromServer = string.Empty;

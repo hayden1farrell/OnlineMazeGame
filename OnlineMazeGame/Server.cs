@@ -16,7 +16,7 @@ public class Server
     {
         Console.WriteLine("Server Start");
         SimpleNet.Server server = SiliconValley();
-        Console.WriteLine($"Server has began IP: {server.IP} ,Port: {server.Port}");
+        Console.WriteLine($"Server has began IP");
 
         bool SeeMessages = true;
         while (true)
@@ -26,7 +26,6 @@ public class Server
             if (NM != null)
             {
                 if (SeeMessages) { Console.WriteLine("Message= " + NM.Data + " from " + NM.clientID); };
-                Console.WriteLine(server.IP);
                 server.broadcastToClients(NM);
                    
             }
@@ -43,7 +42,7 @@ public class Server
         
         Console.Write("Select number: ");
         string ip = localIPs[Convert.ToInt32(Console.ReadLine()) - 1].ToString();
-        int port = 14245;
+        int port = 3333;
         
         SimpleNet.Server myServer = new SimpleNet.Server(ip, port, ref success);
 
