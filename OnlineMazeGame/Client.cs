@@ -1,4 +1,6 @@
-﻿namespace OnlineMazeGame;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace OnlineMazeGame;
 using SimpleNet;
 
 public class Client
@@ -10,20 +12,71 @@ public class Client
         SimpleNet.Client client = ConnectToServer();
         
         string message = "";
+        bool playing = false;
+        bool displaying = false;
         while (true)
         {
-            if (Console.KeyAvailable)
+            if (playing == false && displaying == false)
             {
-                message = Console.ReadLine();
-                client.Send(message);
+                Console.WriteLine("Do you wish to see all games Y/N");
+                if (Console.ReadLine().ToLower() == "y")
+                {
+                    displaying = true;
+                    client.Send("+Request Game Info");
+                }
+                else
+                {
+                    Console.WriteLine("Do you want to (C)reate or (J)oin a game");
+                    if (Console.ReadLine().ToUpper() == "C")
+                        CreateNewGame(client);
+                    else
+                        JoinGame(client);
+                }
             }
+            
             Message NM;
             client.Messages.TryDequeue(out NM);
-            if (NM != null)
-                Console.WriteLine("Message= " + NM.Data + " from " + NM.clientID);
+            if (NM != null) // seeing if the server has sent a message
+            {
+                string data = NM.Data.Substring(1, NM.Data.Length - 1);
+                switch (NM.Data[0])
+                {
+                    case ']':
+                        DisplayGameMenu(data);
+                        displaying = false;
+                        break;
+                    default:
+                        break;
+                }
+            }
 
         }
     }
+    private static void CreateNewGame(SimpleNet.Client client)
+    {
+        client.Send("*Create Game");
+    }
+
+    private static void JoinGame(SimpleNet.Client client)
+    {
+        Console.WriteLine("Enter game ID");
+        int id = Int32.Parse(Console.ReadLine());
+        string JoinMessage = $"-{id},{client}";
+        client.Send(JoinMessage);
+    }
+
+    private static void DisplayGameMenu(string data)
+    {
+        string[] games = data.Split("/]");
+
+        foreach (var game in games)
+        {
+            string[] gameData = game.Split(",");
+            Console.WriteLine($"Game ID: {gameData[0]}, Player Count: {gameData[1].Replace("/","")}");
+        }
+        Console.WriteLine(" ");
+    }
+    
 
     static SimpleNet.Client ConnectToServer()
     {
@@ -31,7 +84,6 @@ public class Client
         try
         {
             SimpleNet.Client MyClient = new SimpleNet.Client(ip, port);
-            Console.WriteLine("My ID = " + MyClient.CLID);
             return MyClient;
         }
         catch(Exception e)

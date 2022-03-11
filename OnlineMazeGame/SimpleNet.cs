@@ -103,6 +103,8 @@ namespace SimpleNet
             }
 
         }
+        
+
         /// <summary>
         /// This will send a message to all connected clients
         /// messages will be transmitted in the form
@@ -178,7 +180,18 @@ namespace SimpleNet
             }
         }
 
+        public void SendToClient(string message, string playerID)
+        {
+            NetworkStream networkStream = Clients[playerID].clientSocket.GetStream();
 
+
+            Byte[] sendBytes = Encoding.ASCII.GetBytes(message+"#" + Clients[playerID].ToString() + "$");
+
+
+            networkStream.Write(sendBytes, 0, sendBytes.Length);
+            networkStream.Flush();
+            Console.Write("sent Data");
+        }
 
 
         /// <summary>

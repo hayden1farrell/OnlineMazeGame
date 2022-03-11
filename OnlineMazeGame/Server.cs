@@ -1,9 +1,11 @@
-﻿namespace OnlineMazeGame;
+﻿using SimpleNet;
+
+namespace OnlineMazeGame;
 using System.Net;
 
 public class Server
 {
-    struct GameInfo
+    public struct GameInfo
     {
         public int PlayerCount;
         public bool open;
@@ -11,9 +13,18 @@ public class Server
         public string[,] playerData;
     }
     
-    private Dictionary<int, GameInfo> games = new Dictionary<int, GameInfo>();
+    public static Dictionary<int, GameInfo> games = new Dictionary<int, GameInfo>();
     public static void Start()
     {
+        GameInfo test = new GameInfo();
+        test.PlayerCount = 5;
+        test.open = true;
+        test.password = "";
+        test.playerData = null;
+        games.Add(0, test);
+        test.PlayerCount = 10;
+        games.Add(1, test);
+
         Console.WriteLine("Server Start");
         SimpleNet.Server server = SiliconValley();
         Console.WriteLine($"Server has began IP");
@@ -25,11 +36,45 @@ public class Server
             server.Messages.TryDequeue(out NM);
             if (NM != null)
             {
-                if (SeeMessages) { Console.WriteLine("Message= " + NM.Data + " from " + NM.clientID); };
-                server.broadcastToClients(NM);
-                   
+                switch (NM.Data[0])
+                {
+                    case '+':
+                        SendGames(server, NM);
+                        break;
+                    case '*':
+                        CreateGame(server, NM);
+                        break;
+                }
+                if (SeeMessages) { Console.WriteLine("Message: " + NM.Data + ",from: " + NM.clientID); };
             }
         }
+    }
+
+    private static void CreateGame(SimpleNet.Server server, Message nm)
+    {
+        int gameID = games.Count;
+        GameInfo gameinfo = new GameInfo();
+        gameinfo.PlayerCount = 1;
+        gameinfo.open = true;
+        gameinfo.password = "";
+        gameinfo.playerData = null;
+        games.Add(gameID, gameinfo);
+    }
+
+    private static void SendGames(SimpleNet.Server server, SimpleNet.Message NM)
+    {
+        string message = "";
+        if (games.Count == 0)
+            message = "]No games have been created";
+        else
+        {
+            foreach (var game in games)
+            {
+                message += "]" + game.Key.ToString() + "," + game.Value.PlayerCount + "/";
+            }
+        }
+        
+        server.SendToClient(message, NM.clientID);
     }
 
     private static SimpleNet.Server? SiliconValley()
