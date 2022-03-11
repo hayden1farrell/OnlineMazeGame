@@ -5,18 +5,32 @@ public class Server
 {
     struct GameInfo
     {
-        public int PlayerCount = 0;
-        public bool open = false;
-        public string password = "";
-        
+        public int PlayerCount;
+        public bool open;
+        public string password;
+        public string[,] playerData;
     }
-
+    
     private Dictionary<int, GameInfo> games = new Dictionary<int, GameInfo>();
     public static void Start()
     {
         Console.WriteLine("Server Start");
         SimpleNet.Server server = SiliconValley();
         Console.WriteLine($"Server has began IP: {server.IP} ,Port: {server.Port}");
+
+        bool SeeMessages = true;
+        while (true)
+        {
+            SimpleNet.Message NM;
+            server.Messages.TryDequeue(out NM);
+            if (NM != null)
+            {
+                if (SeeMessages) { Console.WriteLine("Message= " + NM.Data + " from " + NM.clientID); };
+                Console.WriteLine(server.IP);
+                server.broadcastToClients(NM);
+                   
+            }
+        }
     }
 
     private static SimpleNet.Server? SiliconValley()
@@ -29,7 +43,7 @@ public class Server
         
         Console.Write("Select number: ");
         string ip = localIPs[Convert.ToInt32(Console.ReadLine()) - 1].ToString();
-        int port = 3333;
+        int port = 14245;
         
         SimpleNet.Server myServer = new SimpleNet.Server(ip, port, ref success);
 

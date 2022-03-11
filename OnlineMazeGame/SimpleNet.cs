@@ -272,6 +272,7 @@ namespace SimpleNet
         {
             clientSocket = new TcpClient(serverIP, serverPort);
             clientSocket.Connect(serverIP, serverPort);
+            Console.WriteLine("fff");
             //receive ID
             Byte[] bytesFrom = new byte[65536];
             string DataFromServer = string.Empty;
