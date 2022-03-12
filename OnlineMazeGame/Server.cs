@@ -9,7 +9,6 @@ public class Server
     {
         public int PlayerCount;
         public bool open;
-        public string password;
         public string[,] playerData;
     }
     
@@ -17,13 +16,10 @@ public class Server
     public static void Start()
     {
         GameInfo test = new GameInfo();
-        test.PlayerCount = 5;
+        test.PlayerCount = 0;
         test.open = true;
-        test.password = "";
         test.playerData = null;
         games.Add(0, test);
-        test.PlayerCount = 10;
-        games.Add(1, test);
 
         Console.WriteLine("Server Start");
         SimpleNet.Server server = SiliconValley();
@@ -44,19 +40,48 @@ public class Server
                     case '*':
                         CreateGame(server, NM);
                         break;
+                    case '-':
+                        JoinGame(server, NM);
+                        break;
                 }
-                if (SeeMessages) { Console.WriteLine("Message: " + NM.Data + ",from: " + NM.clientID); };
             }
         }
+    }
+
+    private static void JoinGame(SimpleNet.Server server, Message nm)
+    {
+        string[] reqData = nm.Data.Split(",");
+        int gameID = Int32.Parse(reqData[2].ToString()) - 1;
+        Console.Write(gameID);
+        string clientID = reqData[1];
+
+        if (games[gameID].open == true)
+        {
+            GameInfo info = games[gameID];
+            info.PlayerCount += 1;
+            string[,] playerData = new string[2,2];
+            if (info.PlayerCount == 2)
+            {
+                info.open = false;
+                playerData[0, 0] = info.playerData[0, 0];
+                playerData[0, 1] = info.playerData[0, 1];
+            }
+            playerData[info.PlayerCount - 1, 0] = reqData[3];
+            playerData[info.PlayerCount - 1, 1] = nm.clientID;
+
+            games[gameID] = info;
+            server.SendToClient(">Joined game successfully", nm.clientID);
+        }
+        else
+            server.SendToClient("-Game is full", nm.clientID);
     }
 
     private static void CreateGame(SimpleNet.Server server, Message nm)
     {
         int gameID = games.Count;
         GameInfo gameinfo = new GameInfo();
-        gameinfo.PlayerCount = 1;
+        gameinfo.PlayerCount = 0;
         gameinfo.open = true;
-        gameinfo.password = "";
         gameinfo.playerData = null;
         games.Add(gameID, gameinfo);
     }

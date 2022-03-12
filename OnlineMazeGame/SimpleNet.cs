@@ -190,7 +190,6 @@ namespace SimpleNet
 
             networkStream.Write(sendBytes, 0, sendBytes.Length);
             networkStream.Flush();
-            Console.Write("sent Data");
         }
 
 

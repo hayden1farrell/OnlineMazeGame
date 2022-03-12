@@ -30,7 +30,7 @@ public class Client
                     if (Console.ReadLine().ToUpper() == "C")
                         CreateNewGame(client);
                     else
-                        JoinGame(client);
+                        JoinGame(client, username);
                 }
             }
             
@@ -45,6 +45,10 @@ public class Client
                         DisplayGameMenu(data);
                         displaying = false;
                         break;
+                    case '>':
+                        GameJoined(data, username);
+                        playing = true;
+                        break;
                     default:
                         break;
                 }
@@ -52,16 +56,23 @@ public class Client
 
         }
     }
+
+    private static void GameJoined(string data, string username)
+    {
+        Console.WriteLine("You have joined the game: " + username);
+        Console.WriteLine("When a second player joins the game will start");
+    }
+
     private static void CreateNewGame(SimpleNet.Client client)
     {
         client.Send("*Create Game");
     }
 
-    private static void JoinGame(SimpleNet.Client client)
+    private static void JoinGame(SimpleNet.Client client, string username)
     {
         Console.WriteLine("Enter game ID");
         int id = Int32.Parse(Console.ReadLine());
-        string JoinMessage = $"-{id},{client}";
+        string JoinMessage = $"-,{id},{client.CLID},{username}";
         client.Send(JoinMessage);
     }
 
