@@ -9,23 +9,21 @@ public class Server
     {
         public int PlayerCount;
         public bool open;
-        public string[,] playerData;
+        public string player1Name;
+        public string player2Name;
+        public string player1ID;
+        public string player2ID;
+
     }
     
     public static Dictionary<int, GameInfo> games = new Dictionary<int, GameInfo>();
     public static void Start()
     {
-        GameInfo test = new GameInfo();
-        test.PlayerCount = 0;
-        test.open = true;
-        test.playerData = null;
-        games.Add(0, test);
-
+        Console.Clear();
         Console.WriteLine("Server Start");
-        SimpleNet.Server server = SiliconValley();
-        Console.WriteLine($"Server has began IP");
+        SimpleNet.Server? server = SiliconValley();
+        Console.WriteLine($"Server has began");
 
-        bool SeeMessages = true;
         while (true)
         {
             SimpleNet.Message NM;
@@ -51,29 +49,59 @@ public class Server
     private static void JoinGame(SimpleNet.Server server, Message nm)
     {
         string[] reqData = nm.Data.Split(",");
-        int gameID = Int32.Parse(reqData[2].ToString()) - 1;
-        Console.Write(gameID);
-        string clientID = reqData[1];
-
+        int gameID = Int32.Parse(reqData[1].ToString());
+        bool startGame = false;
         if (games[gameID].open == true)
         {
+            server.SendToClient(">Joined game successfully", nm.clientID);
             GameInfo info = games[gameID];
             info.PlayerCount += 1;
-            string[,] playerData = new string[2,2];
             if (info.PlayerCount == 2)
             {
                 info.open = false;
-                playerData[0, 0] = info.playerData[0, 0];
-                playerData[0, 1] = info.playerData[0, 1];
+                info.player2Name = reqData[3];
+                info.player2ID = nm.clientID;
+                startGame = true;
             }
-            playerData[info.PlayerCount - 1, 0] = reqData[3];
-            playerData[info.PlayerCount - 1, 1] = nm.clientID;
-
+            else
+            {
+                info.player1Name = reqData[3];
+                info.player1ID = nm.clientID;
+            }
             games[gameID] = info;
-            server.SendToClient(">Joined game successfully", nm.clientID);
+            if(startGame == true)  SetUpGame(games[gameID], server);
         }
         else
             server.SendToClient("-Game is full", nm.clientID);
+    }
+
+    private static void SetUpGame(GameInfo info, SimpleNet.Server server)
+    {
+        server.SendToClient($"!A challenger has been found, there name is: {info.player2Name}", info.player1ID);
+        server.SendToClient($"!You have challenged: {info.player1Name}", info.player2ID);
+
+        Game GameHandler = new Game();
+        
+        GameHandler.NewGame(info, server);
+        SendMazeToClients(GameHandler, server, info);
+    }
+
+    private static void SendMazeToClients(Game gameHandler, SimpleNet.Server server, GameInfo info)
+    {
+        string mazeString = "";
+        for (int i = 0; i < gameHandler.maze.GetLength(0); i++)
+        {
+            for (int j = 0; j < gameHandler.maze.GetLength(1); j++)
+            {
+                mazeString += gameHandler.maze[i, j];
+            }
+
+            mazeString += ",";
+        }
+
+        string sendMsg = $"^{mazeString}";
+        server.SendToClient(sendMsg, info.player1ID);
+        server.SendToClient(sendMsg, info.player2ID);
     }
 
     private static void CreateGame(SimpleNet.Server server, Message nm)
@@ -82,7 +110,10 @@ public class Server
         GameInfo gameinfo = new GameInfo();
         gameinfo.PlayerCount = 0;
         gameinfo.open = true;
-        gameinfo.playerData = null;
+        gameinfo.player1Name = "";
+        gameinfo.player2Name = "";
+        gameinfo.player1ID = "";
+        gameinfo.player2ID = "";
         games.Add(gameID, gameinfo);
     }
 

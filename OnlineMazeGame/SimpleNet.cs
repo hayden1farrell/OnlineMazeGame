@@ -39,7 +39,7 @@ namespace SimpleNet
         /// <param name="IPV4Address">The IP Version 4 address as a string e.g. "127.0.0.1"</param>
         /// <param name="port">The port number</param>
         /// <param name="started">a boolean valuw that will tell you whether the server has successfully started</param>
-        public Server(string IPV4Address, int port, ref bool started)
+        public Server(string? IPV4Address, int port, ref bool started)
         {
             try
             {
@@ -215,9 +215,9 @@ namespace SimpleNet
 
     public class ServerClient
     {
-        public TcpClient clientSocket;
-        public string clNo;
-        Server S;
+        public TcpClient? clientSocket;
+        public string? clNo;
+        Server? S;
 
         public void startClient(TcpClient inClientSocket, string clineNo, Server s)
         {
@@ -231,7 +231,7 @@ namespace SimpleNet
         private void listen()
         {
             byte[] bytesFrom = new byte[65536];
-            string dataFromClient = null;
+            string? dataFromClient = null;
 
             while (true)
             {
@@ -241,7 +241,7 @@ namespace SimpleNet
                     networkStream.Read(bytesFrom, 0, (int)clientSocket.ReceiveBufferSize);
                     dataFromClient = System.Text.Encoding.ASCII.GetString(bytesFrom);
                     dataFromClient = dataFromClient.Substring(0, dataFromClient.IndexOf("$") + 1);
-                    string IDofClient = dataFromClient.Substring(dataFromClient.IndexOf("#") + 1, dataFromClient.IndexOf("$") - (dataFromClient.IndexOf("#") + 1));
+                    string? IDofClient = dataFromClient.Substring(dataFromClient.IndexOf("#") + 1, dataFromClient.IndexOf("$") - (dataFromClient.IndexOf("#") + 1));
                     Message M = new Message(IDofClient, dataFromClient.Substring(0, dataFromClient.IndexOf("#")));
                     S.Messages.Enqueue(M);
                     networkStream.Flush();
@@ -275,7 +275,7 @@ namespace SimpleNet
         /// This instantiates a new client
         /// It will handshake with the server and receive its client ID number from the server
         /// </summary>
-        public Client(string serverIP, int serverPort)
+        public Client(string? serverIP, int serverPort)
         {
             clientSocket = new TcpClient(serverIP, serverPort);
             //clientSocket.Connect(serverIP, serverPort);
