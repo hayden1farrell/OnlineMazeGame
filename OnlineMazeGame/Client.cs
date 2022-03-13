@@ -79,8 +79,15 @@ public class Client
 
         while (true)
         {
-            System.Threading.Thread.Sleep(1000/100);
+            GetMovment();
+            
+            System.Threading.Thread.Sleep(500);
         }
+    }
+
+    private static void GetMovment()
+    {
+        throw new NotImplementedException();
     }
 
     private static void ShowMaze(char[,] displayMaze)
