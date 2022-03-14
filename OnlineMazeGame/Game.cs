@@ -42,7 +42,7 @@ class  MazeGeneration
     public static int[,] CreateMaze()
     {
         //arrays to hold maze
-        int mazewidth = 8;
+        int mazewidth = 5;
         // maze data a 1 holds  wall
         Cell[,] cells = SetUpCells(mazewidth);
         return MazeGen(cells, mazewidth);

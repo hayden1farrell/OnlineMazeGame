@@ -93,6 +93,7 @@ public class Client
     private static void UpdateLocation(string data)
     {
         string[] split = data.Split(",");
+
         if (split[2] == client.CLID)
         {
             X = Int32.Parse(split[0]);
@@ -124,8 +125,8 @@ public class Client
 
         while (true)
         {
-            GetMovment(ref X, ref Y);
-            client.Send($"?,{X},{Y}");
+            (int tempX, int tempY ) = GetMovment( X,  Y);
+            client.Send($"?,{tempX},{tempY}");
             int player1X = 0;
             int player1Y = 0;
             int player2X = 0;
@@ -150,30 +151,34 @@ public class Client
             System.Threading.Thread.Sleep(50);
         }
     }
-    private static void GetMovment(ref int x, ref int y)
+    private static (int,int) GetMovment(int x, int y)
     {
+        int tempX = x;
+        int tempY = y;
         if (Console.KeyAvailable)
         {
             ConsoleKeyInfo cki = Console.ReadKey();
             switch (cki.Key)
             {
                 case ConsoleKey.UpArrow:
-                    x -= 1;
+                    tempX -= 1;
                     break;
 
                 case ConsoleKey.DownArrow:
-                    x += 1;
+                    tempX += 1;
                     break;
 
                 case ConsoleKey.LeftArrow:
-                    y -= 1;
+                    tempY -= 1;
                     break;
 
                 case ConsoleKey.RightArrow:
-                    y += 1;
+                    tempY += 1;
                     break;
             }
         }
+
+        return (tempX, tempY);
     }
 
     private static void ShowMaze(int player1X, int player1Y, int player2X, int player2Y)

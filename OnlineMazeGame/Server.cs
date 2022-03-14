@@ -55,16 +55,18 @@ public class Server
         string[] data = nm.Data.Split(",");
         int x = Int32.Parse(data[1]);
         int y = Int32.Parse(data[2]);
-        HandleInput(nm, x, y, games[gameCode].gameHandler);
-        Console.WriteLine(x);
-        
-        server.SendToClient($"({x},{y},{nm.clientID}", games[gameCode].player1ID );
-        server.SendToClient($"({x},{y},{nm.clientID}",  games[gameCode].player2ID);
+        bool valid = HandleInput(nm, x, y, games[gameCode].gameHandler);
+
+        if (valid == true)
+        {
+            server.SendToClient($"({x},{y},{nm.clientID}", games[gameCode].player1ID );
+            server.SendToClient($"({x},{y},{nm.clientID}",  games[gameCode].player2ID);
+        }
     }
 
-    private static void HandleInput(Message nm, int x, int t, Game gameHandler)
+    private static bool HandleInput(Message nm, int x, int y, Game gameHandler)
     {
-        Console.WriteLine("HANDLE EXCEPTIONS");
+        return true;
     }
 
     private static int GetGame(Message nm)
