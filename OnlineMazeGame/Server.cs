@@ -13,7 +13,7 @@ public class Server
         public string player2Name;
         public string player1ID;
         public string player2ID;
-
+        public Game gameHandler;
     }
     
     public static Dictionary<int, GameInfo> games = new Dictionary<int, GameInfo>();
@@ -41,9 +41,41 @@ public class Server
                     case '-':
                         JoinGame(server, NM);
                         break;
+                    case '?':
+                        UpdateLocation(server, NM);
+                        break;
                 }
             }
         }
+    }
+
+    private static void UpdateLocation(SimpleNet.Server server, Message nm)
+    {
+        int gameCode = GetGame(nm);
+        string[] data = nm.Data.Split(",");
+        int x = Int32.Parse(data[1]);
+        int y = Int32.Parse(data[2]);
+        HandleInput(nm, x, y, games[gameCode].gameHandler);
+        Console.WriteLine(x);
+        
+        server.SendToClient($"({x},{y},{nm.clientID}", games[gameCode].player1ID );
+        server.SendToClient($"({x},{y},{nm.clientID}",  games[gameCode].player2ID);
+    }
+
+    private static void HandleInput(Message nm, int x, int t, Game gameHandler)
+    {
+        Console.WriteLine("HANDLE EXCEPTIONS");
+    }
+
+    private static int GetGame(Message nm)
+    {
+        foreach (var game in games)
+        {
+            if (game.Value.player1ID == nm.clientID || game.Value.player2ID == nm.clientID)
+                return game.Key;
+        }
+
+        return 0;
     }
 
     private static void JoinGame(SimpleNet.Server server, Message nm)
@@ -79,11 +111,16 @@ public class Server
     {
         server.SendToClient($"!A challenger has been found, there name is: {info.player2Name}", info.player1ID);
         server.SendToClient($"!You have challenged: {info.player1Name}", info.player2ID);
-
-        Game GameHandler = new Game();
         
-        GameHandler.NewGame(info, server);
-        SendMazeToClients(GameHandler, server, info);
+        info.gameHandler.NewGame(info, server);
+        SendSpawn(server, info, info.gameHandler);
+        SendMazeToClients(info.gameHandler, server, info);
+    }
+
+    private static void SendSpawn(SimpleNet.Server server, GameInfo info, Game gameHandler)
+    {
+        server.SendToClient(":1,1", info.player1ID);
+        server.SendToClient($":{gameHandler.maze.GetLength(0)-3},{gameHandler.maze.GetLength(1)-3}", info.player2ID);
     }
 
     private static void SendMazeToClients(Game gameHandler, SimpleNet.Server server, GameInfo info)
@@ -108,12 +145,15 @@ public class Server
     {
         int gameID = games.Count;
         GameInfo gameinfo = new GameInfo();
+        Game GameHandler = new Game();
         gameinfo.PlayerCount = 0;
         gameinfo.open = true;
         gameinfo.player1Name = "";
         gameinfo.player2Name = "";
         gameinfo.player1ID = "";
         gameinfo.player2ID = "";
+        gameinfo.gameHandler = GameHandler;
+        
         games.Add(gameID, gameinfo);
     }
 

@@ -1,4 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 
 namespace OnlineMazeGame;
 using SimpleNet;
@@ -7,11 +10,20 @@ public class Client
 {
     public static string data = "";
     public static string oppenent = "";
+    public static char[,] displayMaze;
+    public static int X = 0;
+    public static int Y = 0;
+    public static int enemyX = 0;
+    public static int enemyY = 0;
+    public static bool player1 = false;
+    public static int size = 0;
+    public static SimpleNet.Client? client = null;
     public static void Start()
     {
+        Console.OutputEncoding = Encoding.Unicode;  // crucial
         Console.WriteLine("Client Start");
         string username = GetUsername();
-        SimpleNet.Client client = ConnectToServer();
+        client = ConnectToServer();
         
         string message = "";
         bool playing = false;
@@ -64,6 +76,12 @@ public class Client
                     case '^':
                         ParseMaze(data);
                         break;
+                    case ':':
+                        SetSpawn(data);
+                        break;
+                    case '(':
+                        UpdateLocation(data);
+                        break;
                     default:
                         break;
                 }
@@ -71,6 +89,33 @@ public class Client
 
         }
     }
+
+    private static void UpdateLocation(string data)
+    {
+        string[] split = data.Split(",");
+        if (split[2] == client.CLID)
+        {
+            X = Int32.Parse(split[0]);
+            Y = Int32.Parse(split[1]);
+        }
+        else
+        {
+            enemyX = Int32.Parse(split[0]);
+            enemyY = Int32.Parse(split[1]);
+        }
+            
+    }
+
+    private static void SetSpawn(string s)
+    {
+        string[] data = s.Split(",");
+        X = Int32.Parse(data[0]);
+        Y = Int32.Parse(data[1]);
+
+        if (X + Y < 10)
+            player1 = true;
+    }
+
     private static void GameStarted()
     {
         Console.WriteLine("Game has started"); 
@@ -79,26 +124,68 @@ public class Client
 
         while (true)
         {
-            GetMovment();
+            GetMovment(ref X, ref Y);
+            client.Send($"?,{X},{Y}");
+            int player1X = 0;
+            int player1Y = 0;
+            int player2X = 0;
+            int player2Y = 0;
+            if (player1)
+            {
+                player1X = X;
+                player1Y = Y;
+                player2X = enemyX;
+                player2Y = enemyY;
+            }
+            else
+            {
+                player1X = enemyX;
+                player1Y = enemyY;
+                player2X = X;
+                player2Y = Y;
+            }
+
+            ShowMaze(player1X,  player1Y,  player2X,  player2Y);
             
-            System.Threading.Thread.Sleep(500);
+            System.Threading.Thread.Sleep(50);
+        }
+    }
+    private static void GetMovment(ref int x, ref int y)
+    {
+        if (Console.KeyAvailable)
+        {
+            ConsoleKeyInfo cki = Console.ReadKey();
+            switch (cki.Key)
+            {
+                case ConsoleKey.UpArrow:
+                    x -= 1;
+                    break;
+
+                case ConsoleKey.DownArrow:
+                    x += 1;
+                    break;
+
+                case ConsoleKey.LeftArrow:
+                    y -= 1;
+                    break;
+
+                case ConsoleKey.RightArrow:
+                    y += 1;
+                    break;
+            }
         }
     }
 
-    private static void GetMovment()
+    private static void ShowMaze(int player1X, int player1Y, int player2X, int player2Y)
     {
-        throw new NotImplementedException();
-    }
-
-    private static void ShowMaze(char[,] displayMaze)
-    {
-        for (int i = 0; i < displayMaze.GetLength(0) - 1; i++)
+        Console.Clear();
+        for (int i = 0; i < size - 1; i++)
         {
-            for (int j = 0; j < displayMaze.GetLength(1) - 1; j++)
+            for (int j = 0; j < size - 1; j++)
             {
-                if (i == 1 && j == 1)
+                if (i == player1X + 1 && j == player1Y + 1)
                     Console.BackgroundColor = ConsoleColor.Blue;
-                else if (i == displayMaze.GetLength(1) - 3 && j == displayMaze.GetLength(1) - 3)
+                else if (i == player2X + 1 && j == player2Y + 1)
                     Console.BackgroundColor = ConsoleColor.Red;
                 else if (displayMaze[i, j] == '1')
                     Console.BackgroundColor = ConsoleColor.Black;
@@ -115,17 +202,18 @@ public class Client
     private static void ParseMaze(string maze)
     {
         string[] splitMaze = maze.Split(",");
-        char[,] displayMaze = new char[splitMaze.Length,splitMaze.Length];
+        char[,] temp = new char[splitMaze.Length,splitMaze.Length];
+        size = splitMaze.Length;
         for (int i = 0; i < splitMaze.Length; i++)
         {
             string currentLine = splitMaze[i];
             for (int j = 0; j < currentLine.Length; j++)
             {
-                displayMaze[i, j] = currentLine[j];
+                temp[i, j] = currentLine[j];
             }
         }
 
-        ShowMaze(displayMaze);
+        displayMaze = temp;
     }
 
     private static void GameJoined(string data, string username)
